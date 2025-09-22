@@ -28,13 +28,10 @@ async def create_app() -> SimpleNamespace:
     # Create bot with new-style default properties (parse_mode moved out of Bot constructor).
     # This replaces the old: Bot(token=settings.BOT_TOKEN, parse_mode="HTML")
     
-    timeout_seconds = 15
-    bot_session = AiohttpSession(timeout=ClientTimeout(total=timeout_seconds))
-    
     bot = Bot(
         token=settings.BOT_TOKEN,
-        default=DefaultBotProperties(parse_mode=ParseMode.HTML),
-        session=bot_session,
+        default=DefaultBotProperties(parse_mode=ParseMode.HTML)
+        ,
     )
 
     dp = Dispatcher(storage=MemoryStorage())
@@ -79,5 +76,7 @@ async def create_app() -> SimpleNamespace:
         ranks=ranks,
         redis=redis,
         admin_ids=admin_ids,
+        # catalog=catalog,
+        # purchase=purchase,
     )
     return ns

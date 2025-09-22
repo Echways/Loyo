@@ -45,8 +45,8 @@ class RanksStore:
         # cache into redis if available
         if self._redis is not None:
             try:
-                payload = json.dumps([asdict(r) for r in ranks], ensure_ascii=False)
-                await self._redis.set("ranks:data", payload)
+                metadata = json.dumps([asdict(r) for r in ranks], ensure_ascii=False)
+                await self._redis.set("ranks:data", metadata)
             except Exception:
                 # Do not fail startup for redis issues
                 pass

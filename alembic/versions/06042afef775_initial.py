@@ -1,4 +1,4 @@
-"""initial
+"""create users table
 
 Revision ID: 06042afef775
 Revises: 2e94348936c2
@@ -25,8 +25,6 @@ def upgrade():
         sa.Column('username', sa.String(length=64), nullable=True),
         sa.Column('bonus_points', sa.Integer(), nullable=False, server_default=sa.text('0')),
         sa.Column('rank_points', sa.Integer(), nullable=False, server_default=sa.text('0')),
-        sa.Column('rank', sa.String(length=64), nullable=True),
-        sa.Column('cashback_percent', sa.Integer(), nullable=False, server_default=sa.text('0')),
         sa.Column('created_at', sa.TIMESTAMP(timezone=True), server_default=sa.text('now()'), nullable=False),
     )
     # уникальный индекс на tg_id

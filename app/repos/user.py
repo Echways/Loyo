@@ -36,14 +36,6 @@ class UserRepository:
         # Обновляем поля
         user.rank_points = (user.rank_points or 0) + delta
 
-        # Вычисляем ранг по новым очкам ранга
-        rank_item = await self.ranks.get_rank_by_points(user.rank_points)
-        user.rank = rank_item.name if rank_item else None
-        
-        # Вычисляем процент бонусов по новым очкам ранга
-        cashback_percent = await self.ranks.get_cashback_percent_by_points(user.rank_points)
-        user.cashback_percent = cashback_percent if cashback_percent else 0
-
         # Сохраняем изменения
         await self.session.commit()
         await self.session.refresh(user)
@@ -91,6 +83,7 @@ class UserRepository:
         result = await self.session.execute(
             select(User).where(User.tg_id == tg_id).with_for_update()
         )
+        
         user = result.scalar_one_or_none()
         if user is None:
             raise ValueError(f"User with tg_id={tg_id} not found")

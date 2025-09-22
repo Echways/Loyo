@@ -4,27 +4,42 @@
 from typing import Optional, Any, Dict
 import logging
 import inspect
+import importlib
 from aiogram import Router
 
 log = logging.getLogger(__name__)
 
 __all__ = ["register_handlers"]
 
+def _try_import(name: str):
+    """
+    Try import handler submodule robustly:
+     - first try package-relative import (works when package is imported normally)
+     - then try absolute import app.handlers.<name> (works when running from project root / IDE)
+    Logs full exception on failure and returns None.
+    """
+    # try package-relative import: ".<name>" with package=__name__
+    try:
+        module = importlib.import_module(f".{name}", package=__name__)
+        log.info("Imported handlers.%s (relative)", name)
+        return module
+    except Exception as e_rel:
+        log.debug("Relative import handlers.%s failed: %s", name, e_rel)
+
+    # try absolute import: "app.handlers.<name>"
+    try:
+        module = importlib.import_module(f"app.handlers.{name}")
+        log.info("Imported handlers.%s (absolute)", name)
+        return module
+    except Exception as e_abs:
+        log.exception("Failed to import handlers.%s: %s", name, e_abs)
+        return None
+
+
 # Try to import modular handler modules if present
-try:
-    from . import user as _user_mod  # may or may not exist
-except Exception:
-    _user_mod = None
-
-try:
-    from . import admin as _admin_mod
-except Exception:
-    _admin_mod = None
-
-try:
-    from . import callbacks_user as _callbacks_user_mod
-except Exception:
-    _callbacks_user_mod = None
+_user_mod = _try_import("user")
+_admin_mod = _try_import("admin")
+_callbacks_user_mod = _try_import("callbacks_user")
 
 
 def _filter_kwargs_for_callable(callable_obj: Any, deps: Dict[str, Any]) -> Dict[str, Any]:
@@ -54,15 +69,12 @@ def _resolve_router(obj: Any, deps: Dict[str, Any]) -> Router:
          * then try positional call using deps values in parameter order (if possible)
       - otherwise raise TypeError
     """
-    # already instance
     if isinstance(obj, Router):
         return obj
 
-    # if it's a class and is subclass of Router -> instantiate it
     if isinstance(obj, type) and issubclass(obj, Router):
         return obj()
 
-    # if callable: try to call with filtered kwargs first, then try positional
     if callable(obj):
         # 1) try calling with only matching keyword args
         filtered_kwargs = _filter_kwargs_for_callable(obj, deps)
@@ -72,8 +84,6 @@ def _resolve_router(obj: Any, deps: Dict[str, Any]) -> Router:
                 return router
             raise TypeError("Router factory returned non-Router object: %r" % (router,))
         except TypeError as e_kw:
-            # If TypeError mentions unexpected keyword, signature mismatch, or missing args,
-            # we'll attempt positional strategy below; otherwise re-raise.
             log.debug("Keyword call failed for %r with filtered args %r: %s", obj, filtered_kwargs, e_kw)
 
         # 2) try positional: build args tuple in order of parameters if we have values for them
@@ -82,7 +92,6 @@ def _resolve_router(obj: Any, deps: Dict[str, Any]) -> Router:
             positional_args = []
             missing = []
             for name, param in sig.parameters.items():
-                # Only consider positional-or-keyword and positional-only for building positional args
                 if param.kind in (inspect.Parameter.POSITIONAL_ONLY, inspect.Parameter.POSITIONAL_OR_KEYWORD):
                     if name in deps:
                         positional_args.append(deps[name])
@@ -95,13 +104,12 @@ def _resolve_router(obj: Any, deps: Dict[str, Any]) -> Router:
                 return router
             raise TypeError("Router factory returned non-Router object with positional args: %r" % (router,))
         except TypeError as e_pos:
-            # Raise a more informative error explaining both attempts failed
             raise TypeError(f"Callable router factory is not compatible: {e_pos}") from e_pos
 
     raise TypeError("router should be instance of Router or a factory returning Router, got %r" % (obj,))
 
 
-def register_handlers(dp, ranks, async_session_maker, redis=None, admin_ids: Optional[list]=None, ranks_file=None):
+def register_handlers(dp, ranks, async_session_maker, redis=None, admin_ids: Optional[list]=None, ranks_file=None, catalog=None, purchase_service=None):
     """
     Register user/admin/callbacks routers.
     Supports modules that expose either:

@@ -9,8 +9,6 @@ class User(Base):
     username = Column(String(64), nullable=True)
     bonus_points = Column(Integer, default=0, nullable=False)
     rank_points = Column(Integer, default=0, nullable=False)
-    rank = Column(String(64), nullable=True)
-    cashback_percent = Column(Integer, default=0, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
     def __repr__(self):

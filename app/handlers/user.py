@@ -25,24 +25,19 @@ def get_user_router(async_session_maker, ranks) -> Router:
                 user = await repo.create(tg_id=tg.id, username=tg.username)
 
             rank_item = await ranks.get_rank_by_points(user.rank_points)
-            rank_name = rank_item.name if rank_item else "—"
-            cashback_percent = rank_item.cashback_percent if rank_item else 0
+            rank_name = rank_item.name
+            cashback_percent = rank_item.cashback_percent
 
             await message.answer(
-                f"Профиль:\nID: {user.tg_id}\nНик: @{user.username or '-'}\nОчки: {user.bonus_points}\nРанг: {rank_name}\nКэшбек: {cashback_percent}%",
+                f"Профиль:\nID: {user.tg_id}\nБонусные очки: {user.bonus_points}\nРанг: {rank_name}\nКэшбек: {cashback_percent}%",
                 reply_markup=user_profile_keyboard
             )
-
-    # @router.message()
-    # async def cmd_rank(message: types.Message):
-    #     tg = message.from_user
-    #     async with get_session(async_session_maker) as session:
-    #         repo = UserRepository(session)
-    #         user = await repo.get_by_tg_id(tg.id)
-    #         if not user:
-    #             await message.answer("Вы ещё не зарегистрированы. Сначала /start или /profile.")
-    #             return router
-    #         rank = await ranks.get_rank_by_points(user.points)
-    #         await message.answer(f"У вас {user.points} очков. Ранг: {rank.name if rank else '—'}")
+            
+    # show root catalog
+    # @router.message(F.text == "👀 Список товаров")
+    # async def show_catalog(message: types.Message):
+    #     node = catalog.get_node_by_path("")
+    #     kb = await build_catalog_keyboard_with_cache(catalog, node, path="", page=0)
+    #     await message.answer("Каталог:", reply_markup=kb)
 
     return router
