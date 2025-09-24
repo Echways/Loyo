@@ -1,6 +1,4 @@
-# Простая точка входа для разработки: создаёт app, стартует polling, корректно закрывает ресурсы.
 import asyncio
-from pathlib import Path
 from app.factory import create_app
 from app.services.redis import close_redis
 import logging
@@ -14,10 +12,8 @@ async def main():
 
     print("Starting polling...")
     try:
-        # Start polling; aiogram will run handlers registered in factory
         await dp.start_polling(bot)
     finally:
-        # Graceful shutdown
         try:
             await bot.session.close()
         except Exception:

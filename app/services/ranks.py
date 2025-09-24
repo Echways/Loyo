@@ -1,12 +1,3 @@
-"""
-RanksStore: in-memory ranks with optional Redis caching.
-
-- load_from_file(path) : loads JSON list of rank entries, each entry expected to have
-  "min_points" and "name". Sorting is applied by min_points ascending.
-- get_rank_by_points(points) : returns RankItem or None
-- all_ranks() : returns list of RankItem (copy)
-- reload(path) : reloads from file
-"""
 from dataclasses import dataclass, asdict
 from typing import List, Optional
 import asyncio
@@ -24,7 +15,7 @@ class RanksStore:
     def __init__(self, redis=None):
         self._ranks: List[RankItem] = []
         self._lock = asyncio.Lock()
-        self._redis = redis  # optional aioredis client
+        self._redis = redis
 
     async def load_from_file(self, path: Path):
         if not path.exists():
@@ -33,7 +24,6 @@ class RanksStore:
         data = json.loads(text)
         ranks: List[RankItem] = []
         for ent in data:
-            # flexible keys
             min_p = int(ent.get("min_points") or ent.get("min") or 0)
             max_p = int(ent.get("max_points") or ent.get("max") or 0)
             name = str(ent.get("name") or ent.get("title") or "Unnamed")
@@ -42,13 +32,11 @@ class RanksStore:
         ranks.sort(key=lambda r: r.min_points)
         async with self._lock:
             self._ranks = ranks
-        # cache into redis if available
         if self._redis is not None:
             try:
                 metadata = json.dumps([asdict(r) for r in ranks], ensure_ascii=False)
                 await self._redis.set("ranks:data", metadata)
             except Exception:
-                # Do not fail startup for redis issues
                 pass
 
     async def get_rank_by_points(self, points: int) -> Optional[RankItem]:

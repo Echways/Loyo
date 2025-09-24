@@ -1,0 +1,31 @@
+{
+  "id": "root",
+  "title": "Каталог",
+  "items": [
+    {
+      "type": "category",
+      "id": "phones",
+      "title": "Телефоны",
+      "items": [
+        {
+          "type": "product",
+          "id": "p_iphone_15",
+          "title": "iPhone 15",
+          "price": 120000,
+          "description": "Новый iPhone",
+          "parent_id": "phones"
+        }
+      ],
+      "parent_id": "root"
+    },
+    {
+      "type": "product",
+      "id": "p_headphones_1",
+      "title": "Bluetooth наушники",
+      "price": 4990,
+      "description": "Беспроводные наушники",
+      "parent_id": "root"
+    }
+  ],
+  "parent_id": null
+}

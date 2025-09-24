@@ -1,4 +1,3 @@
-# app/handlers/user.py
 from aiogram import Router, types
 from aiogram.filters import Command
 from aiogram import F
@@ -6,9 +5,10 @@ from app.services.db import get_session
 from app.repos.user import UserRepository
 from app.keyboards.reply import index_reply_kb
 from app.keyboards.inline import user_profile_keyboard
-from typing import Any
+from app.services.catalog import CatalogService
+from app.keyboards.catalog import build_catalog_markup
 
-def get_user_router(async_session_maker, ranks) -> Router:
+def get_user_router(async_session_maker, ranks, admin_ids) -> Router:
     router = Router()
     
     @router.message(Command("start"))
@@ -33,11 +33,11 @@ def get_user_router(async_session_maker, ranks) -> Router:
                 reply_markup=user_profile_keyboard
             )
             
-    # show root catalog
-    # @router.message(F.text == "👀 Список товаров")
-    # async def show_catalog(message: types.Message):
-    #     node = catalog.get_node_by_path("")
-    #     kb = await build_catalog_keyboard_with_cache(catalog, node, path="", page=0)
-    #     await message.answer("Каталог:", reply_markup=kb)
+    @router.message(F.text == "👀 Список товаров")
+    async def show_catalog(message: types.Message):
+        service = CatalogService(admin_ids=admin_ids)
+        catalog = service.load_catalog()
+        markup = build_catalog_markup(catalog, include_back=False)
+        await message.answer(text=f"📚 <b>{catalog.get('title')}</b>\nВыберите категорию или товар:", reply_markup=markup)
 
     return router

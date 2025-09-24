@@ -1,4 +1,3 @@
-# app/config.py
 import os
 from typing import List
 from pydantic_settings import BaseSettings
@@ -15,11 +14,10 @@ class Settings(BaseSettings):
     model_config = {
         "env_file": ".env",
         "env_file_encoding": "utf-8",
-        "extra": "ignore",  # ignore extra env keys (so REDIS_URL etc won't break)
+        "extra": "ignore",
     }
 
     def admin_ids(self) -> List[int]:
-        """Return list of admin ids parsed from ADMINS (safe int conversion)."""
         if not self.ADMINS:
             return []
         parts = [p.strip() for p in self.ADMINS.replace(" ", ",").split(",") if p.strip()]
@@ -28,16 +26,11 @@ class Settings(BaseSettings):
             try:
                 ids.append(int(p))
             except ValueError:
-                # skip invalid values silently
                 continue
         return ids
 
-# Instantiate settings
 settings = Settings()
 
-# Support alternative env names for Redis (REDIS_URL or REDIS_URI).
 _alt_redis = os.getenv("REDIS_URL") or os.getenv("REDIS_URI")
 if _alt_redis:
-    # override only if user didn't set a custom REDIS_DSN explicitly different from default
-    # or unconditionally if you prefer alt to win — currently we let alt override always
     settings.REDIS_DSN = _alt_redis
