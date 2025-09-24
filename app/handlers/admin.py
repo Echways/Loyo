@@ -1,11 +1,10 @@
-# app/handlers/admin.py
 from aiogram import Router, types
 from aiogram.filters import Command, CommandObject
 from app.services.db import get_session
 from app.repos.user import UserRepository
 from pathlib import Path
 from typing import List
-from sqlalchemy import text, select
+from sqlalchemy import text
 
 
 def get_admin_router(ranks, async_session_maker, redis=None, admin_ids: List[int]=None, ranks_file: Path=None) -> Router:
@@ -43,7 +42,7 @@ def get_admin_router(ranks, async_session_maker, redis=None, admin_ids: List[int
 
         ok = True
         parts = []
-        # db
+        
         try:
             async with get_session(async_session_maker) as s:
                 await s.execute(text('SELECT 1'))
@@ -51,7 +50,7 @@ def get_admin_router(ranks, async_session_maker, redis=None, admin_ids: List[int
         except Exception as e:
             ok = False
             parts.append(f"DB: ERR ({e})")
-        # redis
+        
         if redis:
             try:
                 pong = await redis.ping()
@@ -69,7 +68,6 @@ def get_admin_router(ranks, async_session_maker, redis=None, admin_ids: List[int
             await message.reply("Доступ запрещён.")
             return router
         
-        # формат: /broadcast Your message here
         text = command.args
         if not text:
             await message.reply("Usage: /broadcast 'message'")
@@ -77,7 +75,7 @@ def get_admin_router(ranks, async_session_maker, redis=None, admin_ids: List[int
         sent = 0
         async with get_session(async_session_maker) as s:
             repo = UserRepository(s)
-            users = await repo.list_all()  # реализуй list_all() в UserRepository
+            users = await repo.list_all()
             for u in users:
                 try:
                     await message.bot.send_message(u.tg_id, text)
@@ -94,7 +92,7 @@ def get_admin_router(ranks, async_session_maker, redis=None, admin_ids: List[int
             await message.reply("Доступ запрещён.")
             return router
         
-        args = command.args  # строка аргументов после команды
+        args = command.args
         if not args:
             await message.reply("Использование: /add_bonus_points 'tg_id' 'delta'")
             return router
@@ -111,7 +109,6 @@ def get_admin_router(ranks, async_session_maker, redis=None, admin_ids: List[int
             await message.reply("Аргументы должны быть целыми числами.")
             return router
 
-        # Вызов репозитория / БД
         try:
             async with get_session(async_session_maker) as s:
                 repo = UserRepository(s)
@@ -130,7 +127,7 @@ def get_admin_router(ranks, async_session_maker, redis=None, admin_ids: List[int
             await message.reply("Доступ запрещён.")
             return router
         
-        args = command.args  # строка аргументов после команды
+        args = command.args
         if not args:
             await message.reply("Использование: /add_rank_points 'tg_id' 'delta'")
             return router
@@ -147,7 +144,6 @@ def get_admin_router(ranks, async_session_maker, redis=None, admin_ids: List[int
             await message.reply("Аргументы должны быть целыми числами.")
             return router
 
-        # Вызов репозитория / БД
         try:
             async with get_session(async_session_maker) as s:
                 repo = UserRepository(s)

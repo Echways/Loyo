@@ -1,5 +1,6 @@
 [
   {"min_points": 0, "max_points": 99, "name": "Новичок", "cashback_percent": 1},
   {"min_points": 100, "max_points": 499, "name": "Серебро", "cashback_percent": 3},
-  {"min_points": 500, "max_points": 0, "name": "Золото", "cashback_percent": 5}
+  {"min_points": 500, "max_points": 4999, "name": "Золото", "cashback_percent": 5},
+  {"min_points": 5000, "max_points": 0, "name": "Платина", "cashback_percent": 8}
 ]

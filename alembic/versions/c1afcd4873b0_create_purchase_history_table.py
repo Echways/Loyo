@@ -19,25 +19,37 @@ depends_on = None
 def upgrade() -> None:
     op.create_table(
         "purchase_history",
-        sa.Column("id", sa.BigInteger, primary_key=True, autoincrement=True),
-        sa.Column("user_id", sa.BigInteger, sa.ForeignKey("users.tg_id", ondelete="CASCADE"), nullable=False, index=True),
-        sa.Column("created_at", sa.TIMESTAMP(timezone=True), server_default=sa.func.now(), nullable=False),
-        sa.Column("type", sa.String(length=32), nullable=True),
-        sa.Column("text", sa.Text, nullable=False),
+        sa.Column("purchase_id", sa.String(length=64), primary_key=True, nullable=False),
+        sa.Column("user_id", sa.BigInteger, nullable=True),
+        sa.Column("product_id", sa.String(length=128), nullable=True),
+        sa.Column("product_title", sa.Text, nullable=True),
+        sa.Column("price", sa.Integer, nullable=True),
+        sa.Column("status", sa.String(length=32), nullable=True),
         sa.Column("payload", postgresql.JSONB, nullable=True),
-        sa.Column("visible", sa.Boolean, nullable=False, server_default=sa.true()),
+        sa.Column("created_at", sa.DateTime, nullable=True),
+        sa.Column("confirmed_at", sa.DateTime, nullable=True),
+        sa.Column("confirmed_by", sa.BigInteger, nullable=True),
+        sa.Column("awarded_points", sa.Integer, nullable=True),
+    )
+
+    # Индексы (purchase_id указан как индекс=True в модели — делаю явный индекс,
+    # хотя PK обычно уже индексируется; если не нужно — можно убрать)
+    op.create_index(
+        "ix_purchase_history_purchase_id",
+        "purchase_history",
+        ["purchase_id"],
     )
     op.create_index(
-        "ix_purchase_history_user_created_at",
+        "ix_purchase_history_user_id",
         "purchase_history",
-        ["user_id", "created_at"],
+        ["user_id"],
     )
     op.create_index(
-        "ix_purchase_history_text_fts",
+        "ix_purchase_history_product_id",
         "purchase_history",
-        [sa.text("to_tsvector('russian', text)")],
-        postgresql_using="gin",
+        ["product_id"],
     )
+    # индекс по payload (GIN) — опционально, если часто делаете JSONB-операции/фильтрацию
     op.create_index(
         "ix_purchase_history_payload",
         "purchase_history",
@@ -48,6 +60,7 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     op.drop_index("ix_purchase_history_payload", table_name="purchase_history")
-    op.drop_index("ix_purchase_history_text_fts", table_name="purchase_history")
-    op.drop_index("ix_purchase_history_user_created_at", table_name="purchase_history")
+    op.drop_index("ix_purchase_history_product_id", table_name="purchase_history")
+    op.drop_index("ix_purchase_history_user_id", table_name="purchase_history")
+    op.drop_index("ix_purchase_history_purchase_id", table_name="purchase_history")
     op.drop_table("purchase_history")

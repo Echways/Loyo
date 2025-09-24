@@ -2,21 +2,15 @@ from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from contextlib import asynccontextmanager
 
 def make_engine_and_session(dsn: str):
-    """
-    Создаём async engine для PostgreSQL (asyncpg).
-    Настройки пула можно менять под нагрузку.
-    """
     engine = create_async_engine(
         dsn,
         future=True,
         echo=False,
-        pool_size=10,        # базовый пул соединений
-        max_overflow=20,     # дополнительные временные соединения
-        pool_timeout=30,     # сек для ожидания свободного соединения
-        pool_pre_ping=True,  # проверяем живость соединения
+        pool_size=10,
+        max_overflow=20,
+        pool_timeout=30,
+        pool_pre_ping=True,
     )
-    
-    
     
     async_session = async_sessionmaker(engine, expire_on_commit=False)
     return engine, async_session

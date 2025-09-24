@@ -1,4 +1,3 @@
-# app/handlers/filters.py
 from aiogram.filters import BaseFilter
 from aiogram import types
 from typing import Iterable

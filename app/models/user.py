@@ -12,4 +12,4 @@ class User(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
     def __repr__(self):
-        return f"<User id={self.id} tg_id={self.tg_id} points={self.bonus_points}>"
+        return f"<User id={self.id} tg_id={self.tg_id} bonus_points={self.bonus_points}>"
