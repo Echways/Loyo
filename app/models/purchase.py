@@ -40,4 +40,4 @@ class PurchaseHistory(Base):
     awarded_points = Column(Integer, nullable=True)
 
     def __repr__(self) -> str:
-        return f"<PurchaseHistory {self.purchase_id} user={self.user_id} status={self.status}>"
+        return f"Товар: {self.product_title} Цена: {self.price} Начислено очков: {self.awarded_points} Статус: {self.status}"

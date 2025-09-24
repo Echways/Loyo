@@ -2,6 +2,7 @@ from aiogram.filters.callback_data import CallbackData
 from aiogram import Router, types
 from app.repos.user import UserRepository
 from app.services.db import get_session
+from .purchase_history import show_purchase_history
 
 
 class UserProfileCallback(CallbackData, prefix="user_profile"):
@@ -33,8 +34,10 @@ def get_callbacks_user_router(async_session_maker, ranks) -> Router:
                     await query.answer("У вас максимальный ранг! Поздравляем!")
                 
         elif callback_data.action == "purchase_history":
-            await query.message.answer("Показываю историю...")
+            async with get_session(async_session_maker) as session:
+                await show_purchase_history(query, session)
+            
         else:
             await query.answer("Неизвестное действие", show_alert=False)
-            
+                        
     return router

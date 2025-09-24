@@ -92,7 +92,7 @@ class CatalogService:
         if not rec or rec.status != "waiting":
             return None
         
-        def serialize_instance(obj):
+        async def serialize_instance(obj):
             result = {}
             for c in inspect(obj).mapper.column_attrs:
                 val = getattr(obj, c.key)
@@ -114,7 +114,7 @@ class CatalogService:
         await user_repo.add_rank_points(rec.user_id, rank_points)
         await pending_repo.mark_confirmed(purchase_id, confirmed_by, bonus_points)
 
-        payload = serialize_instance(rec)
+        payload = await serialize_instance(rec)
 
         await history_repo.update_if_present(purchase_id, {
             "status": "confirmed",
