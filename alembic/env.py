@@ -14,7 +14,6 @@ from logging.config import fileConfig
 import os
 from sqlalchemy import pool
 from alembic import context
-from sqlalchemy import engine_from_config
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import create_async_engine
 
