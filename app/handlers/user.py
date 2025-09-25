@@ -8,7 +8,7 @@ from app.keyboards.inline import user_profile_keyboard
 from app.services.catalog import CatalogService
 from app.keyboards.catalog import build_catalog_markup
 
-def get_user_router(async_session_maker, ranks, admin_ids) -> Router:
+def get_user_router(async_session_maker, ranks, admin_ids, catalog_file) -> Router:
     router = Router()
     
     @router.message(Command("start"))
@@ -36,8 +36,8 @@ def get_user_router(async_session_maker, ranks, admin_ids) -> Router:
     @router.message(F.text == "👀 Список товаров")
     async def show_catalog(message: types.Message):
         service = CatalogService(admin_ids=admin_ids)
-        catalog = service.load_catalog()
-        markup = build_catalog_markup(catalog, include_back=False)
+        catalog = await service.load_from_file(catalog_file)
+        markup = await build_catalog_markup(catalog, include_back=False)
         await message.answer(text=f"📚 <b>{catalog.get('title')}</b>\nВыберите категорию или товар:", reply_markup=markup)
 
     return router

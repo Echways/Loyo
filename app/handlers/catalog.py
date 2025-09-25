@@ -19,11 +19,11 @@ def get_catalog_router(async_session_maker, admin_ids, ranks) -> Router:
         user_id = callback.from_user.id
 
         if action == "open":
-            node = service.find_node(node_id)
+            node = await service.find_node(node_id)
             if not node:
                 await callback.answer("Узел не найден", show_alert=True)
                 return
-            markup = build_catalog_markup(node, include_back=True)
+            markup = await build_catalog_markup(node, include_back=True)
             try:
                 await callback.message.edit_text(f"📂 <b>{node.get('title')}</b>\nВыберите:", reply_markup=markup)
             except Exception:
@@ -32,7 +32,7 @@ def get_catalog_router(async_session_maker, admin_ids, ranks) -> Router:
             return
 
         if action == "product":
-            product = service.find_node(node_id)
+            product = await service.find_node(node_id)
             if not product:
                 await callback.answer("Товар не найден", show_alert=True)
                 return

@@ -36,7 +36,7 @@ class CatalogService:
         with open(catalog_file, "r", encoding="utf-8") as f:
             return json.load(f)
 
-    def find_node(self, node_id: str, node: Optional[Dict[str, Any]] = None) -> Optional[Dict[str, Any]]:
+    async def find_node(self, node_id: str, node: Optional[Dict[str, Any]] = None) -> Optional[Dict[str, Any]]:
         if node is None:
             node = self.load_catalog()
         if node.get("id") == node_id:
@@ -45,7 +45,7 @@ class CatalogService:
             if it.get("id") == node_id:
                 return it
             if it.get("type") == "category":
-                found = self.find_node(node_id, it)
+                found = await self.find_node(node_id, it)
                 if found:
                     return found
         return None

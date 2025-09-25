@@ -21,7 +21,7 @@ async def show_purchase_history(query: types.CallbackQuery, session):
         await query.answer("Вы ещё ничего не покупали", show_alert=True)
         return
 
-    text = build_history_text(purchases)
+    text = await build_history_text(purchases)
     
     try:
         await query.message.edit_text(text)
