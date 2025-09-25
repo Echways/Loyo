@@ -7,7 +7,7 @@ from typing import List
 from sqlalchemy import text
 
 
-def get_admin_router(ranks, async_session_maker, redis=None, admin_ids: List[int]=None, ranks_file: Path=None) -> Router:
+def get_admin_router(ranks, async_session_maker, catalog, redis=None, admin_ids: List[int]=None, ranks_file: Path=None, catalog_file: Path=None) -> Router:
     router = Router()
     
     @router.message(Command("commands"))
@@ -19,7 +19,7 @@ def get_admin_router(ranks, async_session_maker, redis=None, admin_ids: List[int
         await message.reply(admin_commands_help_text)
 
     @router.message(Command("reload_ranks"))
-    async def cmd_reload(message: types.Message):
+    async def cmd_reload_ranks(message: types.Message):
         uid = message.from_user.id if message.from_user else None
         if admin_ids and uid not in admin_ids:
             await message.reply("Доступ запрещён.")
@@ -30,6 +30,21 @@ def get_admin_router(ranks, async_session_maker, redis=None, admin_ids: List[int
         try:
             await ranks.reload(ranks_file)
             await message.reply("Ранги перезагружены.")
+        except Exception as e:
+            await message.reply(f"Ошибка: {e}")
+            
+    @router.message(Command("reload_catalog"))
+    async def cmd_reload_catalog(message: types.Message):
+        uid = message.from_user.id if message.from_user else None
+        if admin_ids and uid not in admin_ids:
+            await message.reply("Доступ запрещён.")
+            return router
+        if not catalog_file:
+            await message.reply("Файл каталога не настроен.")
+            return router
+        try:
+            await catalog.reload(catalog_file)
+            await message.reply("Каталог перезагружен.")
         except Exception as e:
             await message.reply(f"Ошибка: {e}")
 
@@ -158,7 +173,8 @@ def get_admin_router(ranks, async_session_maker, redis=None, admin_ids: List[int
     return router
 
 admin_commands_help_text = "\
-/reload_ranks - Перезаргрузть ранги\n\
+/reload_ranks - Перезаргрузить ранги\n\
+/reload_catalog - Перезаргрузить каталог товаров\n\
 /health - Проверить работоспособность redis и postgres\n\
 /broadcast 'text' - Запустить сообщение всем юзерам\n\
 /add_bonus_points 'tg_id' 'value' -  Добавить пользователю n бонус-очков\n\

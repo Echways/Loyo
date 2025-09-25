@@ -13,23 +13,27 @@ from app.repos.user import UserRepository
 rank_points_coefficent = 0.01
 
 class CatalogService:
-    def __init__(self, admin_ids: Optional[list] = None, catalog_path: Optional[str] = None):
+    def __init__(self, admin_ids: Optional[list] = None, catalog_file: Optional[str] = None):
         base = Path(__file__).resolve().parents[1]
         data_dir = base.parent / "data"
-        self.catalog_path = str(Path(catalog_path) if catalog_path else (data_dir / "catalog.json"))
+        self.catalog_file = str(Path(catalog_file) if catalog_file else (data_dir / "catalog.json"))
         self.admin_ids = admin_ids or []
 
-        if not Path(self.catalog_path).exists():
-            Path(self.catalog_path).parent.mkdir(parents=True, exist_ok=True)
-            with open(self.catalog_path, "w", encoding="utf-8") as f:
+        if not Path(self.catalog_file).exists():
+            Path(self.catalog_file).parent.mkdir(parents=True, exist_ok=True)
+            with open(self.catalog_file, "w", encoding="utf-8") as f:
                 json.dump({"id": "root", "title": "Каталог", "items": []}, f, ensure_ascii=False, indent=2)
         cat = self.load_catalog()
         self._normalize_parents(cat, parent_id=None)
-        with open(self.catalog_path, "w", encoding="utf-8") as f:
+        with open(self.catalog_file, "w", encoding="utf-8") as f:
             json.dump(cat, f, ensure_ascii=False, indent=2)
 
     def load_catalog(self) -> Dict[str, Any]:
-        with open(self.catalog_path, "r", encoding="utf-8") as f:
+        with open(self.catalog_file, "r", encoding="utf-8") as f:
+            return json.load(f)
+        
+    async def load_from_file(self, catalog_file) -> Dict[str, Any]:
+        with open(catalog_file, "r", encoding="utf-8") as f:
             return json.load(f)
 
     def find_node(self, node_id: str, node: Optional[Dict[str, Any]] = None) -> Optional[Dict[str, Any]]:
@@ -125,4 +129,7 @@ class CatalogService:
         })
 
         return bonus_points
+    
+    async def reload(self, path: Path):
+        await self.load_from_file(path)
     

@@ -81,7 +81,7 @@ def _resolve_router(obj: Any, deps: Dict[str, Any]) -> Router:
     raise TypeError("router should be instance of Router or a factory returning Router, got %r" % (obj,))
 
 
-def register_handlers(dp, ranks, async_session_maker, redis=None, admin_ids: Optional[list]=None, ranks_file=None, engine=None):
+def register_handlers(dp, ranks, async_session_maker, redis=None, admin_ids: Optional[list]=None, ranks_file=None, engine=None, catalog_file=None, catalog=None):
     if admin_ids is None:
         admin_ids = []
 
@@ -92,6 +92,8 @@ def register_handlers(dp, ranks, async_session_maker, redis=None, admin_ids: Opt
         "admin_ids": admin_ids,
         "ranks_file": ranks_file,
         "engine": engine,
+        "catalog": catalog,
+        "catalog_file": catalog_file,
     }
 
     modules = [

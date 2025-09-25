@@ -19,11 +19,19 @@
       "parent_id": "root"
     },
     {
-      "type": "product",
-      "id": "p_headphones_1",
-      "title": "Bluetooth наушники",
-      "price": 4990,
-      "description": "Беспроводные наушники",
+      "type": "category",
+      "id": "headphones",
+      "title": "Наушники",
+      "items": [
+        {
+          "type": "product",
+          "id": "p_airpodspro_3",
+          "title": "Airpods Pro 3",
+          "price": 25000,
+          "description": "Новые Airpods",
+          "parent_id": "headphones"
+        }
+      ],
       "parent_id": "root"
     }
   ],
