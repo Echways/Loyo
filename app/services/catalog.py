@@ -58,7 +58,7 @@ class CatalogService:
             else:
                 it["parent_id"] = node.get("id")
                 
-    async def create_purchase(self, session: AsyncSession, user_id: int, product_node: Dict[str, Any]) -> str:
+    async def create_purchase(self, session: AsyncSession, user_id: int, product_node: Dict[str, Any], redeemed_bonus = 0) -> str:
         pending_repo = PendingRepository(session)
         history_repo = PurchaseHistoryRepo(session)
 
@@ -69,7 +69,7 @@ class CatalogService:
             "user_id": user_id,
             "product_id": product_node.get("id"),
             "product_title": product_node.get("title"),
-            "price": product_node.get("price"),
+            "price": product_node.get("price")-redeemed_bonus,
             "status": "waiting",
             "created_at": now,
             "payload": product_node
@@ -80,14 +80,14 @@ class CatalogService:
             "user_id": user_id,
             "product_id": product_node.get("id"),
             "product_title": product_node.get("title"),
-            "price": product_node.get("price"),
+            "price": product_node.get("price")-redeemed_bonus,
             "status": "waiting",
             "payload": product_node,
             "created_at": now
         })
         return purchase_id
 
-    async def confirm_purchase(self, session: AsyncSession, ranks, purchase_id: str, confirmed_by: int) -> Optional[int]:
+    async def confirm_purchase(self, session: AsyncSession, ranks, purchase_id: str, confirmed_by: int, redeemed_bonus = 0) -> Optional[int]:
         pending_repo = PendingRepository(session)
         history_repo = PurchaseHistoryRepo(session)
         user_repo = UserRepository(session)
@@ -111,9 +111,10 @@ class CatalogService:
         rank_item = await ranks.get_rank_by_points(user_item.rank_points)
         cashback = rank_item.cashback_percent/100
         
-        bonus_points = max(1, int(price*cashback)) if price > 0 else 1
+        bonus_points = max(1, int(price*cashback)) if price > 0 and redeemed_bonus == 0 else 0
         rank_points = max(1, int(price*rank_points_coefficent)) if price > 0 else 1
-
+        
+        await user_repo.redeem_bonus_points(rec.user_id, redeemed_bonus)
         await user_repo.add_bonus_points(rec.user_id, bonus_points)
         await user_repo.add_rank_points(rec.user_id, rank_points)
         await pending_repo.mark_confirmed(purchase_id, confirmed_by, bonus_points)
