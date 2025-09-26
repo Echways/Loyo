@@ -4,12 +4,14 @@ import asyncio
 import json
 from pathlib import Path
 
+
 @dataclass(frozen=True)
 class RankItem:
     min_points: int
     max_points: int
     name: str
     cashback_percent: int
+
 
 class RanksStore:
     def __init__(self, redis=None):
@@ -28,7 +30,14 @@ class RanksStore:
             max_p = int(ent.get("max_points") or ent.get("max") or 0)
             name = str(ent.get("name") or ent.get("title") or "Unnamed")
             cashback_p = int(ent.get("cashback_percent") or ent.get("cashback") or 0)
-            ranks.append(RankItem(min_points=min_p, max_points=max_p, name=name, cashback_percent=cashback_p))
+            ranks.append(
+                RankItem(
+                    min_points=min_p,
+                    max_points=max_p,
+                    name=name,
+                    cashback_percent=cashback_p,
+                )
+            )
         ranks.sort(key=lambda r: r.min_points)
         async with self._lock:
             self._ranks = ranks
@@ -45,7 +54,7 @@ class RanksStore:
                 if points >= r.min_points:
                     return r
         return None
-    
+
     async def get_rank_points_range_by_points(self, points: int) -> Optional[int | int]:
         res = [-1, -1]
         async with self._lock:
@@ -55,7 +64,7 @@ class RanksStore:
                     res[1] = r.max_points
                     return res
         return None
-    
+
     async def get_cashback_percent_by_points(self, points: int) -> Optional[int]:
         async with self._lock:
             for r in reversed(self._ranks):

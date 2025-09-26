@@ -5,13 +5,14 @@ Revises: 06042afef775
 Create Date: 2025-09-22 00:04:54.609817
 
 """
+
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = 'c1afcd4873b0'
-down_revision = '06042afef775'
+revision = "c1afcd4873b0"
+down_revision = "06042afef775"
 branch_labels = None
 depends_on = None
 
@@ -19,7 +20,9 @@ depends_on = None
 def upgrade() -> None:
     op.create_table(
         "purchase_history",
-        sa.Column("purchase_id", sa.String(length=64), primary_key=True, nullable=False),
+        sa.Column(
+            "purchase_id", sa.String(length=64), primary_key=True, nullable=False
+        ),
         sa.Column("user_id", sa.BigInteger, nullable=True),
         sa.Column("product_id", sa.String(length=128), nullable=True),
         sa.Column("product_title", sa.Text, nullable=True),

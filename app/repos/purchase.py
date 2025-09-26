@@ -24,11 +24,10 @@ class PendingRepository:
         return result.scalar_one_or_none()
 
     async def mark_confirmed(
-        self, purchase_id: str, confirmed_by: int, awarded_points: int) -> bool:
+        self, purchase_id: str, confirmed_by: int, awarded_points: int
+    ) -> bool:
         result = await self.session.execute(
-            select(Pending)
-            .where(Pending.purchase_id == purchase_id)
-            .with_for_update()
+            select(Pending).where(Pending.purchase_id == purchase_id).with_for_update()
         )
         inst: Optional[Pending] = result.scalar_one_or_none()
         if not inst:
@@ -48,10 +47,12 @@ class PurchaseHistoryRepo:
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def insert_if_present(self, payload: Dict[str, Any]) -> Optional[PurchaseHistory]:
+    async def insert_if_present(
+        self, payload: Dict[str, Any]
+    ) -> Optional[PurchaseHistory]:
         allowed = {c.name for c in PurchaseHistory.__table__.columns}
         filtered = {k: v for k, v in payload.items() if k in allowed}
-        
+
         if not filtered:
             return None
 
@@ -62,7 +63,9 @@ class PurchaseHistoryRepo:
 
         return inst
 
-    async def update_if_present(self, purchase_id: str, updates: Dict[str, Any]) -> bool:
+    async def update_if_present(
+        self, purchase_id: str, updates: Dict[str, Any]
+    ) -> bool:
         allowed = {c.name for c in PurchaseHistory.__table__.columns}
         filtered = {k: v for k, v in updates.items() if k in allowed}
         if not filtered:
@@ -73,7 +76,7 @@ class PurchaseHistoryRepo:
             .where(PurchaseHistory.purchase_id == purchase_id)
             .with_for_update()
         )
-        
+
         inst: Optional[PurchaseHistory] = result.scalar_one_or_none()
         if inst is None:
             return False
@@ -85,8 +88,10 @@ class PurchaseHistoryRepo:
         await self.session.refresh(inst)
 
         return True
-    
-    async def get_history_by_tg_id(self, tg_id: int, limit: int) -> list[PurchaseHistory]:
+
+    async def get_history_by_tg_id(
+        self, tg_id: int, limit: int
+    ) -> list[PurchaseHistory]:
         res = await self.session.execute(
             select(PurchaseHistory)
             .where(PurchaseHistory.user_id == tg_id)
@@ -95,4 +100,3 @@ class PurchaseHistoryRepo:
             .limit(limit)
         )
         return res.scalars().all()
-    

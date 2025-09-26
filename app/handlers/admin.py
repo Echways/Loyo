@@ -7,9 +7,17 @@ from typing import List
 from sqlalchemy import text
 
 
-def get_admin_router(ranks, async_session_maker, catalog, redis=None, admin_ids: List[int]=None, ranks_file: Path=None, catalog_file: Path=None) -> Router:
+def get_admin_router(
+    ranks,
+    async_session_maker,
+    catalog,
+    redis=None,
+    admin_ids: List[int] = None,
+    ranks_file: Path = None,
+    catalog_file: Path = None,
+) -> Router:
     router = Router()
-    
+
     @router.message(Command("commands"))
     async def cmd_reload(message: types.Message):
         uid = message.from_user.id if message.from_user else None
@@ -32,7 +40,7 @@ def get_admin_router(ranks, async_session_maker, catalog, redis=None, admin_ids:
             await message.reply("Ранги перезагружены.")
         except Exception as e:
             await message.reply(f"Ошибка: {e}")
-            
+
     @router.message(Command("reload_catalog"))
     async def cmd_reload_catalog(message: types.Message):
         uid = message.from_user.id if message.from_user else None
@@ -57,15 +65,15 @@ def get_admin_router(ranks, async_session_maker, catalog, redis=None, admin_ids:
 
         ok = True
         parts = []
-        
+
         try:
             async with get_session(async_session_maker) as s:
-                await s.execute(text('SELECT 1'))
+                await s.execute(text("SELECT 1"))
             parts.append("DB: OK")
         except Exception as e:
             ok = False
             parts.append(f"DB: ERR ({e})")
-        
+
         if redis:
             try:
                 pong = await redis.ping()
@@ -82,7 +90,7 @@ def get_admin_router(ranks, async_session_maker, catalog, redis=None, admin_ids:
         if admin_ids and uid not in admin_ids:
             await message.reply("Доступ запрещён.")
             return router
-        
+
         text = command.args
         if not text:
             await message.reply("Usage: /broadcast 'message'")
@@ -98,15 +106,14 @@ def get_admin_router(ranks, async_session_maker, catalog, redis=None, admin_ids:
                 except Exception:
                     continue
         await message.reply(f"Рассылка отправлена примерно {sent} пользователям.")
-        
-        
+
     @router.message(Command("add_bonus_points"))
     async def cmd_add_points(message: types.Message, command: CommandObject):
         uid = message.from_user.id if message.from_user else None
         if admin_ids and uid not in admin_ids:
             await message.reply("Доступ запрещён.")
             return router
-        
+
         args = command.args
         if not args:
             await message.reply("Использование: /add_bonus_points 'tg_id' 'delta'")
@@ -129,8 +136,10 @@ def get_admin_router(ranks, async_session_maker, catalog, redis=None, admin_ids:
                 repo = UserRepository(s)
                 user = await repo.get_by_tg_id(tg_id)
                 user = await repo.add_bonus_points(tg_id=tg_id, delta=delta)
-                await message.reply(f"Готово: {tg_id} теперь имеет {user.bonus_points} бонусных очков.")
-                
+                await message.reply(
+                    f"Готово: {tg_id} теперь имеет {user.bonus_points} бонусных очков."
+                )
+
         except Exception as e:
             await message.reply(f"Ошибка при обновлении: {e}")
             return router
@@ -141,7 +150,7 @@ def get_admin_router(ranks, async_session_maker, catalog, redis=None, admin_ids:
         if admin_ids and uid not in admin_ids:
             await message.reply("Доступ запрещён.")
             return router
-        
+
         args = command.args
         if not args:
             await message.reply("Использование: /add_rank_points 'tg_id' 'delta'")
@@ -164,13 +173,16 @@ def get_admin_router(ranks, async_session_maker, catalog, redis=None, admin_ids:
                 repo = UserRepository(s)
                 user = await repo.get_by_tg_id(tg_id)
                 user = await repo.add_rank_points(tg_id=tg_id, delta=delta)
-                await message.reply(f"Готово: {tg_id} теперь имеет {user.rank_points} очков ранга.")
-                
+                await message.reply(
+                    f"Готово: {tg_id} теперь имеет {user.rank_points} очков ранга."
+                )
+
         except Exception as e:
             await message.reply(f"Ошибка при обновлении: {e}")
             return router
 
     return router
+
 
 admin_commands_help_text = "\
 /reload_ranks - Перезаргрузить ранги\n\

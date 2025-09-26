@@ -12,17 +12,27 @@ from app.repos.user import UserRepository
 
 rank_points_coefficent = 0.01
 
+
 class CatalogService:
-    def __init__(self, admin_ids: Optional[list] = None, catalog_file: Optional[str] = None):
+    def __init__(
+        self, admin_ids: Optional[list] = None, catalog_file: Optional[str] = None
+    ):
         base = Path(__file__).resolve().parents[1]
         data_dir = base.parent / "data"
-        self.catalog_file = str(Path(catalog_file) if catalog_file else (data_dir / "catalog.json"))
+        self.catalog_file = str(
+            Path(catalog_file) if catalog_file else (data_dir / "catalog.json")
+        )
         self.admin_ids = admin_ids or []
 
         if not Path(self.catalog_file).exists():
             Path(self.catalog_file).parent.mkdir(parents=True, exist_ok=True)
             with open(self.catalog_file, "w", encoding="utf-8") as f:
-                json.dump({"id": "root", "title": "Каталог", "items": []}, f, ensure_ascii=False, indent=2)
+                json.dump(
+                    {"id": "root", "title": "Каталог", "items": []},
+                    f,
+                    ensure_ascii=False,
+                    indent=2,
+                )
         cat = self.load_catalog()
         self._normalize_parents(cat, parent_id=None)
         with open(self.catalog_file, "w", encoding="utf-8") as f:
@@ -31,12 +41,14 @@ class CatalogService:
     def load_catalog(self) -> Dict[str, Any]:
         with open(self.catalog_file, "r", encoding="utf-8") as f:
             return json.load(f)
-        
+
     async def load_from_file(self, catalog_file) -> Dict[str, Any]:
         with open(catalog_file, "r", encoding="utf-8") as f:
             return json.load(f)
 
-    async def find_node(self, node_id: str, node: Optional[Dict[str, Any]] = None) -> Optional[Dict[str, Any]]:
+    async def find_node(
+        self, node_id: str, node: Optional[Dict[str, Any]] = None
+    ) -> Optional[Dict[str, Any]]:
         if node is None:
             node = self.load_catalog()
         if node.get("id") == node_id:
@@ -57,8 +69,14 @@ class CatalogService:
                 self._normalize_parents(it, node.get("id"))
             else:
                 it["parent_id"] = node.get("id")
-                
-    async def create_purchase(self, session: AsyncSession, user_id: int, product_node: Dict[str, Any], redeemed_bonus = 0) -> str:
+
+    async def create_purchase(
+        self,
+        session: AsyncSession,
+        user_id: int,
+        product_node: Dict[str, Any],
+        redeemed_bonus=0,
+    ) -> str:
         pending_repo = PendingRepository(session)
         history_repo = PurchaseHistoryRepo(session)
 
@@ -69,33 +87,42 @@ class CatalogService:
             "user_id": user_id,
             "product_id": product_node.get("id"),
             "product_title": product_node.get("title"),
-            "price": product_node.get("price")-redeemed_bonus,
+            "price": product_node.get("price") - redeemed_bonus,
             "status": "waiting",
             "created_at": now,
-            "payload": product_node
+            "payload": product_node,
         }
         await pending_repo.create(record)
-        await history_repo.insert_if_present({
-            "purchase_id": purchase_id,
-            "user_id": user_id,
-            "product_id": product_node.get("id"),
-            "product_title": product_node.get("title"),
-            "price": product_node.get("price")-redeemed_bonus,
-            "status": "waiting",
-            "payload": product_node,
-            "created_at": now
-        })
+        await history_repo.insert_if_present(
+            {
+                "purchase_id": purchase_id,
+                "user_id": user_id,
+                "product_id": product_node.get("id"),
+                "product_title": product_node.get("title"),
+                "price": product_node.get("price") - redeemed_bonus,
+                "status": "waiting",
+                "payload": product_node,
+                "created_at": now,
+            }
+        )
         return purchase_id
 
-    async def confirm_purchase(self, session: AsyncSession, ranks, purchase_id: str, confirmed_by: int, redeemed_bonus = 0) -> Optional[int]:
+    async def confirm_purchase(
+        self,
+        session: AsyncSession,
+        ranks,
+        purchase_id: str,
+        confirmed_by: int,
+        redeemed_bonus=0,
+    ) -> Optional[int]:
         pending_repo = PendingRepository(session)
         history_repo = PurchaseHistoryRepo(session)
         user_repo = UserRepository(session)
-        
+
         rec = await pending_repo.get(purchase_id)
         if not rec or rec.status != "waiting":
             return None
-        
+
         async def serialize_instance(obj):
             result = {}
             for c in inspect(obj).mapper.column_attrs:
@@ -106,14 +133,16 @@ class CatalogService:
             return result
 
         price = int(rec.price or 0)
-        
+
         user_item = await user_repo.get_by_tg_id(rec.user_id)
         rank_item = await ranks.get_rank_by_points(user_item.rank_points)
-        cashback = rank_item.cashback_percent/100
-        
-        bonus_points = max(1, int(price*cashback)) if price > 0 and redeemed_bonus == 0 else 0
-        rank_points = max(1, int(price*rank_points_coefficent)) if price > 0 else 1
-        
+        cashback = rank_item.cashback_percent / 100
+
+        bonus_points = (
+            max(1, int(price * cashback)) if price > 0 and redeemed_bonus == 0 else 0
+        )
+        rank_points = max(1, int(price * rank_points_coefficent)) if price > 0 else 1
+
         await user_repo.redeem_bonus_points(rec.user_id, redeemed_bonus)
         await user_repo.add_bonus_points(rec.user_id, bonus_points)
         await user_repo.add_rank_points(rec.user_id, rank_points)
@@ -121,16 +150,18 @@ class CatalogService:
 
         payload = await serialize_instance(rec)
 
-        await history_repo.update_if_present(purchase_id, {
-            "status": "confirmed",
-            "confirmed_by": confirmed_by,
-            "awarded_points": bonus_points,
-            "confirmed_at": datetime.now(),
-            "payload": payload
-        })
+        await history_repo.update_if_present(
+            purchase_id,
+            {
+                "status": "confirmed",
+                "confirmed_by": confirmed_by,
+                "awarded_points": bonus_points,
+                "confirmed_at": datetime.now(),
+                "payload": payload,
+            },
+        )
 
         return bonus_points
-    
+
     async def reload(self, path: Path):
         await self.load_from_file(path)
-    

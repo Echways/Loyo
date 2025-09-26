@@ -8,14 +8,18 @@ from app.keyboards.inline import user_profile_keyboard
 from app.services.catalog import CatalogService
 from app.keyboards.catalog import build_catalog_markup
 
+
 def get_user_router(async_session_maker, ranks, admin_ids, catalog_file) -> Router:
     router = Router()
-    
+
     @router.message(Command("start"))
     async def cmd_start(message: types.Message):
-        await message.answer("Добро пожаловать! Воспользуйся клавиатурой ниже для доступа к возможностям.", reply_markup=index_reply_kb)
+        await message.answer(
+            "Добро пожаловать! Воспользуйся клавиатурой ниже для доступа к возможностям.",
+            reply_markup=index_reply_kb,
+        )
 
-    @router.message(F.text == '👤 Мой профиль')
+    @router.message(F.text == "👤 Мой профиль")
     async def cmd_profile(message: types.Message):
         tg = message.from_user
         async with get_session(async_session_maker) as session:
@@ -30,14 +34,17 @@ def get_user_router(async_session_maker, ranks, admin_ids, catalog_file) -> Rout
 
             await message.answer(
                 f"Профиль:\nID: {user.tg_id}\nБонусные очки: {user.bonus_points}\nРанг: {rank_name}\nКэшбек: {cashback_percent}%",
-                reply_markup=user_profile_keyboard
+                reply_markup=user_profile_keyboard,
             )
-            
+
     @router.message(F.text == "👀 Список товаров")
     async def show_catalog(message: types.Message):
         service = CatalogService(admin_ids=admin_ids)
         catalog = await service.load_from_file(catalog_file)
         markup = await build_catalog_markup(catalog, include_back=False)
-        await message.answer(text=f"📚 <b>{catalog.get('title')}</b>\nВыберите категорию или товар:", reply_markup=markup)
+        await message.answer(
+            text=f"📚 <b>{catalog.get('title')}</b>\nВыберите категорию или товар:",
+            reply_markup=markup,
+        )
 
     return router

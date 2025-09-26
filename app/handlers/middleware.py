@@ -4,6 +4,7 @@ from aiogram import BaseMiddleware
 
 log = logging.getLogger(__name__)
 
+
 class ErrorMiddleware(BaseMiddleware):
     def __init__(self, admin_ids=None, redis=None):
         super().__init__()

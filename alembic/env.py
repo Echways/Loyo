@@ -19,6 +19,7 @@ from sqlalchemy.ext.asyncio import create_async_engine
 
 import sys
 from pathlib import Path
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 
@@ -37,10 +38,13 @@ if config.config_file_name is not None:
 try:
     from app.models.base import Base  # <- обязательно поправь путь если у тебя другой
 except Exception as ex:
-    raise RuntimeError("Не удалось импортировать Base. Исправь путь в alembic/env.py") from ex
+    raise RuntimeError(
+        "Не удалось импортировать Base. Исправь путь в alembic/env.py"
+    ) from ex
 
 target_metadata = getattr(Base, "metadata", None)
 # ---------------------------------------------------------------------------
+
 
 # Опционально: получить URL из env var DATABASE_URL или из alembic.ini
 def get_database_url() -> str:
@@ -51,8 +55,11 @@ def get_database_url() -> str:
     # fallback to value from alembic.ini (if configured)
     url = config.get_main_option("sqlalchemy.url")
     if not url:
-        raise RuntimeError("DATABASE_URL не задан и sqlalchemy.url в alembic.ini отсутствует")
+        raise RuntimeError(
+            "DATABASE_URL не задан и sqlalchemy.url в alembic.ini отсутствует"
+        )
     return url
+
 
 # -----------------------------------------------------------------------------
 # Offline migrations (SQL script generation) — стандартный путь
@@ -70,23 +77,30 @@ def run_migrations_offline():
     with context.begin_transaction():
         context.run_migrations()
 
+
 # -----------------------------------------------------------------------------
 # Online migrations (используем async engine и run_sync)
 # -----------------------------------------------------------------------------
 def do_run_migrations(connection: Connection):
-    context.configure(connection=connection, target_metadata=target_metadata, compare_type=True)
+    context.configure(
+        connection=connection, target_metadata=target_metadata, compare_type=True
+    )
 
     with context.begin_transaction():
         context.run_migrations()
 
+
 async def run_async_migrations():
     url = get_database_url()
-    connectable = create_async_engine(url, poolclass=pool.NullPool)  # NullPool часто удобен для миграций
+    connectable = create_async_engine(
+        url, poolclass=pool.NullPool
+    )  # NullPool часто удобен для миграций
     try:
         async with connectable.connect() as connection:
             await connection.run_sync(do_run_migrations)
     finally:
         await connectable.dispose()
+
 
 # -----------------------------------------------------------------------------
 # Entry point

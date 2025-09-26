@@ -3,6 +3,7 @@ from app.repos.user import UserRepository
 from app.repos.purchase import PurchaseHistoryRepo
 from app.services.purchase_history import build_history_text
 
+
 async def show_purchase_history(query: types.CallbackQuery, session):
     tg = query.from_user
 
@@ -22,7 +23,7 @@ async def show_purchase_history(query: types.CallbackQuery, session):
         return
 
     text = await build_history_text(purchases)
-    
+
     try:
         await query.message.edit_text(text)
         await query.answer()

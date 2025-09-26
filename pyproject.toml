@@ -1,5 +1,9 @@
 [tool.black]
 line-length = 88
+
+[tool.poetry.group.dev.dependencies]
+black = "^25.9.0"
+
 [project]
 name = "telegram-loyalty-program-bot"
 version = "0.1.0"

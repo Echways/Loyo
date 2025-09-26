@@ -2,6 +2,7 @@ from aiogram.filters import BaseFilter
 from aiogram import types
 from typing import Iterable
 
+
 class AdminFilter(BaseFilter):
     def __init__(self, admin_ids: Iterable[int]):
         self.admin_ids = set(admin_ids or [])

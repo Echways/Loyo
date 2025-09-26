@@ -3,12 +3,21 @@ from aiogram.types import CallbackQuery
 from typing import Optional
 
 from app.services.catalog import CatalogService
-from app.keyboards.catalog import build_catalog_markup, CatalogCB, RedeemCB, build_user_redeem_markup, build_admin_confirm_kb
+from app.keyboards.catalog import (
+    build_catalog_markup,
+    CatalogCB,
+    RedeemCB,
+    build_user_redeem_markup,
+    build_admin_confirm_kb,
+)
 from app.repos.purchase import PendingRepository
 from app.repos.user import UserRepository
 from app.services.db import get_session
 
-def get_catalog_router(async_session_maker, admin_ids, ranks, redis: Optional[object] = None) -> Router:
+
+def get_catalog_router(
+    async_session_maker, admin_ids, ranks, redis: Optional[object] = None
+) -> Router:
     service = CatalogService(admin_ids=admin_ids)
     router = Router()
 
@@ -27,9 +36,13 @@ def get_catalog_router(async_session_maker, admin_ids, ranks, redis: Optional[ob
                 return
             markup = await build_catalog_markup(node, include_back=True)
             try:
-                await callback.message.edit_text(f"📂 <b>{node.get('title')}</b>\nВыберите:", reply_markup=markup)
+                await callback.message.edit_text(
+                    f"📂 <b>{node.get('title')}</b>\nВыберите:", reply_markup=markup
+                )
             except Exception:
-                await callback.message.answer(f"📂 <b>{node.get('title')}</b>\nВыберите:", reply_markup=markup)
+                await callback.message.answer(
+                    f"📂 <b>{node.get('title')}</b>\nВыберите:", reply_markup=markup
+                )
             await callback.answer()
             return
 
@@ -44,7 +57,11 @@ def get_catalog_router(async_session_maker, admin_ids, ranks, redis: Optional[ob
                 async with get_session(async_session_maker) as session:
                     user_repo = UserRepository(session)
                     user = await user_repo.get_by_tg_id(user_id)
-                    user_bonus = int(user.bonus_points) if user and getattr(user, "bonus_points", None) is not None else 0
+                    user_bonus = (
+                        int(user.bonus_points)
+                        if user and getattr(user, "bonus_points", None) is not None
+                        else 0
+                    )
             except Exception:
                 user_bonus = 0
 
@@ -64,7 +81,9 @@ def get_catalog_router(async_session_maker, admin_ids, ranks, redis: Optional[ob
 
         if action == "admin_confirm":
             if admin_ids and callback.from_user.id not in admin_ids:
-                await callback.answer("Только администратор может подтверждать оплату.", show_alert=True)
+                await callback.answer(
+                    "Только администратор может подтверждать оплату.", show_alert=True
+                )
                 return
 
             try:
@@ -78,25 +97,37 @@ def get_catalog_router(async_session_maker, admin_ids, ranks, redis: Optional[ob
                     redeemed_bonus = 0
                     try:
                         payload = rec.payload or {}
-                        orig_price = int(payload.get("price") if payload and payload.get("price") is not None else 0)
+                        orig_price = int(
+                            payload.get("price")
+                            if payload and payload.get("price") is not None
+                            else 0
+                        )
                         after_price = int(rec.price or 0)
                         redeemed_bonus = max(0, orig_price - after_price)
                     except Exception:
                         redeemed_bonus = 0
 
-                    points = await service.confirm_purchase(session, ranks, purchase_id, confirmed_by=callback.from_user.id, redeemed_bonus=redeemed_bonus)
+                    points = await service.confirm_purchase(
+                        session,
+                        ranks,
+                        purchase_id,
+                        confirmed_by=callback.from_user.id,
+                        redeemed_bonus=redeemed_bonus,
+                    )
             except Exception:
                 await callback.answer("Ошибка при подтверждении", show_alert=True)
                 return
 
             if points is None:
-                await callback.answer("Заявка не найдена или уже обработана", show_alert=True)
+                await callback.answer(
+                    "Заявка не найдена или уже обработана", show_alert=True
+                )
                 return
 
             try:
                 await callback.message.edit_text(
-                    callback.message.text +
-                    f"\n\n✅ Подтверждено администратором <code>{callback.from_user.id}</code>."
+                    callback.message.text
+                    + f"\n\n✅ Подтверждено администратором <code>{callback.from_user.id}</code>."
                     f" Списано {redeemed_bonus} бонусов. Начислено {points} баллов."
                 )
             except Exception:
@@ -108,13 +139,23 @@ def get_catalog_router(async_session_maker, admin_ids, ranks, redis: Optional[ob
                     pending_repo2 = PendingRepository(session2)
                     rec2 = await pending_repo2.get(purchase_id)
                     if rec2:
-                        uid = rec2.user_id if hasattr(rec2, "user_id") else rec2.get("user_id")
-                        product_title = rec2.product_title if hasattr(rec2, "product_title") else rec2.get("product_title")
+                        uid = (
+                            rec2.user_id
+                            if hasattr(rec2, "user_id")
+                            else rec2.get("user_id")
+                        )
+                        product_title = (
+                            rec2.product_title
+                            if hasattr(rec2, "product_title")
+                            else rec2.get("product_title")
+                        )
                         await callback.bot.send_message(
                             uid,
-                            (f"✅ Ваш платёж подтверждён. Вам начислено {points} баллов.\n"
-                             f"Товар: {product_title}\n"
-                             f"Списано бонусов: {redeemed_bonus}")
+                            (
+                                f"✅ Ваш платёж подтверждён. Вам начислено {points} баллов.\n"
+                                f"Товар: {product_title}\n"
+                                f"Списано бонусов: {redeemed_bonus}"
+                            ),
                         )
             except Exception:
                 pass
@@ -123,7 +164,9 @@ def get_catalog_router(async_session_maker, admin_ids, ranks, redis: Optional[ob
             return
 
     @router.callback_query(RedeemCB.filter())
-    async def redeem_choice_handler(callback: CallbackQuery, callback_data=RedeemCB.filter()):
+    async def redeem_choice_handler(
+        callback: CallbackQuery, callback_data=RedeemCB.filter()
+    ):
         data = callback_data
         choice = data.choice
         product_id = data.product_id
@@ -131,7 +174,9 @@ def get_catalog_router(async_session_maker, admin_ids, ranks, redis: Optional[ob
 
         if choice == "cancel":
             try:
-                await callback.message.edit_text(callback.message.text + "\n\n🛑 Покупка отменена.")
+                await callback.message.edit_text(
+                    callback.message.text + "\n\n🛑 Покупка отменена."
+                )
             except Exception:
                 pass
             await callback.answer("Отменено")
@@ -153,7 +198,11 @@ def get_catalog_router(async_session_maker, admin_ids, ranks, redis: Optional[ob
                 async with get_session(async_session_maker) as session:
                     user_repo = UserRepository(session)
                     user = await user_repo.get_by_tg_id(user_id)
-                    user_bonus = int(user.bonus_points) if user and getattr(user, "bonus_points", None) is not None else 0
+                    user_bonus = (
+                        int(user.bonus_points)
+                        if user and getattr(user, "bonus_points", None) is not None
+                        else 0
+                    )
                     redeemed_bonus = min(user_bonus, product_price)
             except Exception:
                 redeemed_bonus = 0
@@ -184,7 +233,9 @@ def get_catalog_router(async_session_maker, admin_ids, ranks, redis: Optional[ob
 
         try:
             async with get_session(async_session_maker) as session:
-                purchase_id_new = await service.create_purchase(session, user_id, product, redeemed_bonus)
+                purchase_id_new = await service.create_purchase(
+                    session, user_id, product, redeemed_bonus
+                )
         except Exception:
             await callback.answer("Ошибка при создании заявки", show_alert=True)
             return
@@ -202,14 +253,19 @@ def get_catalog_router(async_session_maker, admin_ids, ranks, redis: Optional[ob
             f"purchase_id: <code>{purchase_id_new}</code>\n\n"
             "Нажмите кнопку ниже после реальной оплаты для начисления бонусов."
         )
-        for aid in (admin_ids or []):
+        for aid in admin_ids or []:
             try:
-                await callback.bot.send_message(chat_id=aid, text=admin_text, reply_markup=kb)
+                await callback.bot.send_message(
+                    chat_id=aid, text=admin_text, reply_markup=kb
+                )
             except Exception:
                 pass
 
         try:
-            await callback.message.edit_text(callback.message.text + "\n\n✅ Заявка создана и отправлена администраторам. Ожидайте подтверждения.")
+            await callback.message.edit_text(
+                callback.message.text
+                + "\n\n✅ Заявка создана и отправлена администраторам. Ожидайте подтверждения."
+            )
         except Exception:
             pass
 
@@ -225,7 +281,7 @@ def get_catalog_router(async_session_maker, admin_ids, ranks, redis: Optional[ob
                 val = await redis.get(user_key)
                 if val:
                     if isinstance(val, bytes):
-                        product_id = val.decode('utf-8')
+                        product_id = val.decode("utf-8")
                     else:
                         product_id = str(val)
         except Exception:
@@ -240,7 +296,9 @@ def get_catalog_router(async_session_maker, admin_ids, ranks, redis: Optional[ob
             if amt < 0:
                 raise ValueError()
         except Exception:
-            await message.reply("Неверный формат суммы. Отправьте неотрицательное целое число.")
+            await message.reply(
+                "Неверный формат суммы. Отправьте неотрицательное целое число."
+            )
             return
 
         try:
@@ -258,9 +316,15 @@ def get_catalog_router(async_session_maker, admin_ids, ranks, redis: Optional[ob
             async with get_session(async_session_maker) as session:
                 user_repo = UserRepository(session)
                 user = await user_repo.get_by_tg_id(user_id)
-                user_bonus = int(user.bonus_points) if user and getattr(user, "bonus_points", None) is not None else 0
+                user_bonus = (
+                    int(user.bonus_points)
+                    if user and getattr(user, "bonus_points", None) is not None
+                    else 0
+                )
         except Exception:
-            await message.reply("Не удалось проверить баланс или товар — попробуйте позже.")
+            await message.reply(
+                "Не удалось проверить баланс или товар — попробуйте позже."
+            )
             try:
                 if redis is not None:
                     await redis.delete(user_key)
@@ -269,16 +333,22 @@ def get_catalog_router(async_session_maker, admin_ids, ranks, redis: Optional[ob
             return
 
         if amt > product_price:
-            await message.reply(f"Нельзя списать больше, чем стоимость товара ({product_price}₽). Отправьте число не больше {product_price}.")
+            await message.reply(
+                f"Нельзя списать больше, чем стоимость товара ({product_price}₽). Отправьте число не больше {product_price}."
+            )
             return
 
         if amt > user_bonus:
-            await message.reply(f"У вас недостаточно бонусов. Доступно: {user_bonus}. Отправьте число не больше {user_bonus}.")
+            await message.reply(
+                f"У вас недостаточно бонусов. Доступно: {user_bonus}. Отправьте число не больше {user_bonus}."
+            )
             return
 
         try:
             async with get_session(async_session_maker) as session:
-                purchase_id_new = await service.create_purchase(session, user_id, product, amt)
+                purchase_id_new = await service.create_purchase(
+                    session, user_id, product, amt
+                )
         except Exception:
             await message.reply("Ошибка при создании заявки с вашей суммой.")
             try:
@@ -301,18 +371,21 @@ def get_catalog_router(async_session_maker, admin_ids, ranks, redis: Optional[ob
             f"purchase_id: <code>{purchase_id_new}</code>\n\n"
             "Нажмите кнопку ниже после реальной оплаты для начисления бонусов."
         )
-        for aid in (admin_ids or []):
+        for aid in admin_ids or []:
             try:
-                await message.bot.send_message(chat_id=aid, text=admin_text, reply_markup=kb)
+                await message.bot.send_message(
+                    chat_id=aid, text=admin_text, reply_markup=kb
+                )
             except Exception:
                 pass
 
-        await message.reply("✅ Заявка создана и отправлена администраторам. Ожидайте подтверждения.")
+        await message.reply(
+            "✅ Заявка создана и отправлена администраторам. Ожидайте подтверждения."
+        )
         try:
             if redis is not None:
                 await redis.delete(user_key)
         except Exception:
             pass
-        
 
     return router

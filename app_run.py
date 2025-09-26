@@ -5,6 +5,7 @@ import logging
 
 logging.basicConfig(level=logging.INFO)
 
+
 async def main():
     app = await create_app()
     bot = app.bot
@@ -27,6 +28,7 @@ async def main():
         except Exception:
             pass
         print("Shutdown complete.")
+
 
 if __name__ == "__main__":
     asyncio.run(main())

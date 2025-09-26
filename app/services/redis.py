@@ -1,5 +1,6 @@
 try:
     from redis import asyncio as redis_asyncio  # type: ignore
+
     _BACKEND = "redis"
 except Exception:
     redis_asyncio = None  # type: ignore
@@ -8,6 +9,7 @@ except Exception:
 if _BACKEND is None:
     try:
         import aioredis  # type: ignore
+
         _BACKEND = "aioredis"
     except Exception:
         aioredis = None  # type: ignore
@@ -21,7 +23,9 @@ if _BACKEND is None:
 
 async def make_redis(dsn: str, *, decode_responses: bool = True, **kwargs):
     if _BACKEND == "redis":
-        client = redis_asyncio.from_url(dsn, decode_responses=decode_responses, **kwargs)
+        client = redis_asyncio.from_url(
+            dsn, decode_responses=decode_responses, **kwargs
+        )
         return client
 
     if hasattr(aioredis, "from_url"):
