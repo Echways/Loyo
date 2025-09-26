@@ -9,9 +9,9 @@
       "items": [
         {
           "type": "product",
-          "id": "p_iphone_15",
-          "title": "iPhone 15",
-          "price": 120000,
+          "id": "p_iphone_17",
+          "title": "iPhone 17",
+          "price": 80000,
           "description": "Новый iPhone",
           "parent_id": "phones"
         }
