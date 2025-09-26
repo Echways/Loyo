@@ -18,7 +18,7 @@ class Settings(BaseSettings):
         "extra": "ignore",
     }
 
-    def admin_ids(self) -> List[int]:
+    def admin_idss(self) -> List[int]:
         if not self.ADMINS:
             return []
         parts = [p.strip() for p in self.ADMINS.replace(" ", ",").split(",") if p.strip()]
