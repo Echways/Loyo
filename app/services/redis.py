@@ -1,45 +1,53 @@
-import asyncio
-import logging
-from typing import Optional
-import aioredis
+try:
+    from redis import asyncio as redis_asyncio  # type: ignore
+    _BACKEND = "redis"
+except Exception:
+    redis_asyncio = None  # type: ignore
+    _BACKEND = None
 
-log = logging.getLogger(__name__)
+if _BACKEND is None:
+    try:
+        import aioredis  # type: ignore
+        _BACKEND = "aioredis"
+    except Exception:
+        aioredis = None  # type: ignore
 
-_redis: Optional[aioredis.Redis] = None
-_redis_lock = asyncio.Lock()
+if _BACKEND is None:
+    raise RuntimeError(
+        "Нет установленного async Redis-клиента. Установите пакет 'redis' (redis-py >=4.x): "
+        "pip install 'redis>=4.2.0' или добавьте зависимость в pyproject.toml."
+    )
 
-async def make_redis(dsn: str, *, max_connections: int = 10) -> aioredis.Redis:
-    global _redis
-    async with _redis_lock:
-        if _redis is not None:
-            return _redis
+
+async def make_redis(dsn: str, *, decode_responses: bool = True, **kwargs):
+    if _BACKEND == "redis":
+        client = redis_asyncio.from_url(dsn, decode_responses=decode_responses, **kwargs)
+        return client
+
+    if hasattr(aioredis, "from_url"):
+        pool = await aioredis.from_url(dsn, decode_responses=decode_responses, **kwargs)
+        return pool
+    else:
+        pool = await aioredis.create_redis_pool(dsn, **kwargs)
+        return pool
+
+
+async def close_redis(client):
+    if client is None:
+        return
+
+    if _BACKEND == "redis":
         try:
-            _redis = aioredis.from_url(
-                dsn,
-                encoding="utf-8",
-                decode_responses=True,
-                max_connections=max_connections
-            )
-
-            try:
-                pong = await _redis.ping()
-                log.info("Redis connected, PING -> %s", pong)
-            except Exception as e:
-                await _redis.close()
-                _redis = None
-                raise
-            return _redis
-        except Exception as e:
-            log.exception("Failed to create Redis client for %s: %s", dsn, e)
-            raise
-
-async def close_redis():
-    global _redis
-    async with _redis_lock:
-        if _redis is not None:
-            try:
-                await _redis.close()
-            except Exception:
-                log.exception("Error while closing redis")
-            finally:
-                _redis = None
+            await client.close()
+            await client.wait_closed()
+        except Exception:
+            pass
+    else:
+        try:
+            client.close()
+        except Exception:
+            pass
+        try:
+            await client.wait_closed()
+        except Exception:
+            pass

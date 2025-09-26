@@ -5,7 +5,7 @@ name = "telegram-loyalty-program-bot"
 version = "0.1.0"
 description = "Telegram bot with profile and loyalty program for offline shops"
 authors = [
-    {name = "Your Name",email = "you@example.com"}
+    {name = "Echways",email = "Echways@gmail.com"}
 ]
 readme = "README.md"
 requires-python = ">=3.10"
@@ -17,7 +17,9 @@ dependencies = [
     "sqlalchemy (>=2.0.43,<3.0.0)",
     "pydantic (>=2.11.9,<3.0.0)",
     "pathlib (>=1.0.1,<2.0.0)",
-    "alembic (>=1.16.5,<2.0.0)"
+    "alembic (>=1.16.5,<2.0.0)",
+    "pydantic-settings (>=2.11.0,<3.0.0)",
+    "redis (>=6.4.0,<7.0.0)"
 ]
 
 
