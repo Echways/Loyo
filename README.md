@@ -31,8 +31,13 @@
 ---
 
 ## Быстрый запуск (Docker)
-
-1. Создайте файл `.env` рядом с `docker-compose.yml` и заполните обязательные переменные (ниже пример):
+1. Клонируйте репозиторий:
+   
+   ```bash
+   git clone git@github.com:Echways/telegram-loyalty-program-bot.git
+   cd telegram-loyalty-program-bot
+   ```
+3. Создайте файл `.env` рядом с `docker-compose.yml` и заполните обязательные переменные (ниже пример):
 
    ```
    BOT_TOKEN=123:abc-def
@@ -42,7 +47,7 @@
    REDIS_DSN=redis://redis:6379/0
    ADMINS=123456789  # comma separated list of admin Telegram IDs e.g. "12345,67890"
    ```
-3. Поднимите контейнеры:
+4. Поднимите контейнеры:
    
    ```sh
    docker compose --build --no-cache
@@ -50,13 +55,19 @@
    ```
 ## Локальный запуск
 
-1. Установите зависимости через Poetry:
+1. Клонируйте репозиторий:
+   ```bash
+   git clone git@github.com:Echways/telegram-loyalty-program-bot.git
+   cd telegram-loyalty-program-bot
+   ```
+
+2. Установите зависимости через Poetry:
 
    ```sh
    pip install poetry
    poetry install --only main
    ```
-2. Создайте файл `.env` и заполните обязательные переменные (ниже пример):
+3. Создайте файл `.env` и заполните обязательные переменные (ниже пример):
 
    ```
    BOT_TOKEN=123:abc-def
