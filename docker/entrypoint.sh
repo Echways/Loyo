@@ -1,3 +1,4 @@
+#!/bin/sh
 set -e
 
 if [ -n "$DB_DSN" ] && [ -z "$DATABASE_URL" ]; then
