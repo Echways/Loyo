@@ -1,13 +1,10 @@
-#!/bin/sh
 set -e
 
-# Export DATABASE_URL from DB_DSN if necessary
 if [ -n "$DB_DSN" ] && [ -z "$DATABASE_URL" ]; then
   export DATABASE_URL="$DB_DSN"
   echo "Exported DATABASE_URL from DB_DSN"
 fi
 
-# Парсер host и port из DATABASE_URL (простейший)
 get_host_port() {
   url="$1"
   hostport=$(echo "$url" | sed -E 's|^[^@]*@||' | sed -E 's|/.*$||')
@@ -17,7 +14,6 @@ get_host_port() {
   echo "$host" "$port"
 }
 
-# Если это postgres — ждём доступности хоста:порта и прогоняем alembic
 if [ -n "$DATABASE_URL" ] && echo "$DATABASE_URL" | grep -qi "postgres"; then
   read host port <<EOF
 $(get_host_port "$DATABASE_URL")
@@ -50,5 +46,4 @@ EOF
   fi
 fi
 
-# Запускаем основную команду контейнера
 exec "$@"
