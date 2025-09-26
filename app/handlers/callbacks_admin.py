@@ -1,5 +1,5 @@
 from aiogram.filters.callback_data import CallbackData
-from aiogram import Router, types
+from aiogram import Router
 
 
 class MenuCallback(CallbackData, prefix="admin"):

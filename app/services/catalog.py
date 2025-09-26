@@ -6,7 +6,6 @@ import json
 import uuid
 from sqlalchemy import inspect
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.inspection import inspect
 from app.repos.purchase import PendingRepository, PurchaseHistoryRepo
 from app.repos.user import UserRepository
 

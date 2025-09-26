@@ -108,7 +108,7 @@ def get_admin_router(
         await message.reply(f"Рассылка отправлена примерно {sent} пользователям.")
 
     @router.message(Command("add_bonus_points"))
-    async def cmd_add_points(message: types.Message, command: CommandObject):
+    async def cmd_add_bonus_points(message: types.Message, command: CommandObject):
         uid = message.from_user.id if message.from_user else None
         if admin_ids and uid not in admin_ids:
             await message.reply("Доступ запрещён.")
@@ -145,7 +145,7 @@ def get_admin_router(
             return router
 
     @router.message(Command("add_rank_points"))
-    async def cmd_add_points(message: types.Message, command: CommandObject):
+    async def cmd_add_rank_points(message: types.Message, command: CommandObject):
         uid = message.from_user.id if message.from_user else None
         if admin_ids and uid not in admin_ids:
             await message.reply("Доступ запрещён.")

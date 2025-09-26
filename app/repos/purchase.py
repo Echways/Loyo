@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import Optional, Dict, Any
 from datetime import datetime
-from sqlalchemy import select, desc, func
+from sqlalchemy import select, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.purchase import Pending, PurchaseHistory
 
