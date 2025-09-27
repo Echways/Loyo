@@ -37,7 +37,7 @@
    git clone git@github.com:Echways/telegram-loyalty-program-bot.git
    cd telegram-loyalty-program-bot
    ```
-3. Создайте файл `.env` рядом с `docker-compose.yml` и заполните обязательные переменные (ниже пример):
+2. Создайте файл `.env` рядом с `docker-compose.yml` и заполните обязательные переменные (ниже пример):
 
    ```
    BOT_TOKEN=123:abc-def
@@ -47,11 +47,11 @@
    REDIS_DSN=redis://redis:6379/0
    ADMINS=123456789  # comma separated list of admin Telegram IDs e.g. "12345,67890"
    ```
-4. Поднимите контейнеры:
+3. Поднимите контейнеры:
    
    ```sh
-   docker compose --build --no-cache
-   docker compose up
+   chmod +x scripts/migrate.sh
+   make full
    ```
 ## Локальный запуск
 
@@ -77,15 +77,19 @@
    REDIS_DSN=redis://redis:6379/0
    ADMINS=123456789  # comma separated list of admin Telegram IDs e.g. "12345,67890"
    ```
-4. Примените alembic миграции:
-
+4. Создайте контейнеры:
    ```sh
-   export DATABASE_URL={Ваша DB_DSN}
-   alembic upgrade head
+   make build
    ```
-5. Запустите бот:
+5. Примените alembic миграции:
 
    ```sh
-   python3 app_run.py
+   chmod +x scripts/migrate.sh
+   make upgrade
+   ```
+6. Запустите бот:
+
+   ```sh
+   make up
    ```
    
