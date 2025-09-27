@@ -56,18 +56,18 @@
 ## Локальный запуск
 
 1. Клонируйте репозиторий:
+   
    ```bash
    git clone git@github.com:Echways/telegram-loyalty-program-bot.git
    cd telegram-loyalty-program-bot
    ```
-
-2. Установите зависимости через Poetry:
+3. Установите зависимости через Poetry:
 
    ```sh
    pip install poetry
    poetry install --only main
    ```
-3. Создайте файл `.env` и заполните обязательные переменные (ниже пример):
+4. Создайте файл `.env` и заполните обязательные переменные (ниже пример):
 
    ```
    BOT_TOKEN=123:abc-def
@@ -77,19 +77,15 @@
    REDIS_DSN=redis://redis:6379/0
    ADMINS=123456789  # comma separated list of admin Telegram IDs e.g. "12345,67890"
    ```
-4. Создайте контейнеры:
-   ```sh
-   make build
-   ```
 5. Примените alembic миграции:
-
+   
    ```sh
-   chmod +x scripts/migrate.sh
-   make upgrade
+   export DATABASE_URL={Ваша DB_DSN}
+   alembic upgrade head
    ```
 6. Запустите бот:
 
    ```sh
-   make up
+   python3 app_run.py
    ```
    
