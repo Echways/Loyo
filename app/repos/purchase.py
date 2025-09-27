@@ -29,7 +29,8 @@ class PendingRepository:
         result = await self.session.execute(
             select(Pending).where(Pending.purchase_id == purchase_id).with_for_update()
         )
-        inst: Optional[Pending] = result.scalar_one_or_none()
+
+        inst = result.scalar_one_or_none()
         if not inst:
             return False
 
@@ -77,7 +78,7 @@ class PurchaseHistoryRepo:
             .with_for_update()
         )
 
-        inst: Optional[PurchaseHistory] = result.scalar_one_or_none()
+        inst = result.scalar_one_or_none()
         if inst is None:
             return False
 
