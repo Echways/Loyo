@@ -8,6 +8,7 @@ from sqlalchemy import inspect
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.repos.purchase import PendingRepository, PurchaseHistoryRepo
 from app.repos.user import UserRepository
+from app.services.db import get_session
 
 rank_points_coefficent = 0.01
 
@@ -164,3 +165,77 @@ class CatalogService:
 
     async def reload(self, path: Path):
         await self.load_from_file(path)
+
+
+async def check_balance_or_product(
+    async_session_maker, service, message, product_id, redis, user_id, user_key=None
+):
+    try:
+        product = await service.find_node(product_id)
+        if not product:
+            await message.reply("Товар не найден / устарел.")
+            try:
+                if redis is not None:
+                    await redis.delete(user_key)
+            except Exception:
+                pass
+            return
+        product_price = int(product.get("price") or 0)
+
+        async with get_session(async_session_maker) as session:
+            user_repo = UserRepository(session)
+            user = await user_repo.get_by_tg_id(user_id)
+            user_bonus = (
+                int(user.bonus_points)
+                if user and getattr(user, "bonus_points", None) is not None
+                else 0
+            )
+
+        return product, product_price, user_bonus
+    except Exception:
+        await message.reply("Не удалось проверить баланс или товар — попробуйте позже.")
+        try:
+            if redis is not None:
+                await redis.delete(user_key)
+        except Exception:
+            pass
+        return
+
+
+async def create_purchase_request(
+    async_session_maker,
+    service,
+    user_id,
+    product,
+    amt,
+    redis,
+    user_key=None,
+    message=None,
+    callback=None,
+):
+    if message is not None:
+        try:
+            async with get_session(async_session_maker) as session:
+                purchase_id_new = await service.create_purchase(
+                    session, user_id, product, amt
+                )
+                return purchase_id_new
+        except Exception:
+            await message.reply("Ошибка при создании заявки с вашей суммой.")
+            try:
+                if redis is not None:
+                    await redis.delete(user_key)
+            except Exception:
+                pass
+            return
+
+    elif callback is not None:
+        try:
+            async with get_session(async_session_maker) as session:
+                purchase_id_new = await service.create_purchase(
+                    session, user_id, product, amt
+                )
+                return purchase_id_new
+        except Exception:
+            await callback.answer("Ошибка при создании заявки", show_alert=True)
+            return
