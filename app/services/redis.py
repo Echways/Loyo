@@ -55,3 +55,30 @@ async def close_redis(client):
             await client.wait_closed()
         except Exception:
             pass
+
+
+async def fill_custom_bonus(redis, user_id, product_id):
+    user_key = f"user:custom:{user_id}"
+    try:
+        await redis.set(user_key, product_id, ex=600)
+    except Exception:
+        try:
+            await redis.setex(user_key, 600, product_id)
+        except Exception:
+            pass
+
+
+async def get_product_id(redis, user_key):
+    product_id = None
+    try:
+        if redis is not None:
+            val = await redis.get(user_key)
+            if val:
+                if isinstance(val, bytes):
+                    product_id = val.decode("utf-8")
+                else:
+                    product_id = str(val)
+        return product_id
+    except Exception:
+        product_id = None
+        return product_id
