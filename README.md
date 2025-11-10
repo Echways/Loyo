@@ -1,4 +1,4 @@
-# Telegram Loyalty Program Bot
+# Loyo - Telegram loyalty program bot
 
 [![CI](https://img.shields.io/github/actions/workflow/status/Echways/telegram-loyalty-program-bot/ci.yml?branch=main)](https://github.com/)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/)
