@@ -58,8 +58,8 @@
 1. Клонируйте репозиторий:
    
    ```bash
-   git clone git@github.com:Echways/telegram-loyalty-program-bot.git
-   cd telegram-loyalty-program-bot
+   git clone git@github.com:Echways/Loyo.git
+   cd Loyo
    ```
 3. Установите зависимости через Poetry:
 
